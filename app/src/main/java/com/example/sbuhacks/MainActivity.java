@@ -1,10 +1,17 @@
 package com.example.sbuhacks;
 
+
 import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.location.Address;
 import android.location.Location;
+
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+
 import android.os.Bundle;
 import android.location.Geocoder;
 
@@ -16,9 +23,13 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 
+
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.PermissionChecker;
+
+import androidx.core.app.NotificationCompat;
+
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -169,5 +180,19 @@ public class MainActivity extends AppCompatActivity {
                 callPermissions();
             }
         });
+    }
+
+    protected void Notification(){
+        NotificationCompat.Builder builder = new NotificationCompat.Builder( this)
+                .setSmallIcon(R.drawable.notbear)
+                .setContentTitle("Hey you!")
+                .setContentText("Do you have everything?");
+
+        Intent notificationIntent = new Intent(this, MainActivity.class);
+        PendingIntent contentIntent = PendingIntent.getActivity(this,0,notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setContentIntent(contentIntent);
+
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        manager.notify(0,builder.build());
     }
 }
