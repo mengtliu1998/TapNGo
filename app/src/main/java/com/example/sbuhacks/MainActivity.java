@@ -6,6 +6,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 
+import androidx.core.app.NotificationCompat;
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -35,5 +36,12 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+    }
+
+    protected void Notification(){
+        NotificationCompat.Builder builder = new NotificationCompat.Builder( this, CHANNEL_ID)
+                .setSmallIcon(R.mipmap.)
+                .setContentTitle("Hey you!")
+                .setContentText("Do you have everything?");
     }
 }
