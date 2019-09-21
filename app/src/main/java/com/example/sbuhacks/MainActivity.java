@@ -1,5 +1,9 @@
 package com.example.sbuhacks;
 
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -39,9 +43,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected void Notification(){
-        NotificationCompat.Builder builder = new NotificationCompat.Builder( this, CHANNEL_ID)
-                .setSmallIcon(R.mipmap.)
+        NotificationCompat.Builder builder = new NotificationCompat.Builder( this)
+                .setSmallIcon(R.drawable.ic_bear)
                 .setContentTitle("Hey you!")
                 .setContentText("Do you have everything?");
+
+        Intent notificationIntent = new Intent(this, MainActivity.class);
+        PendingIntent contentIntent = PendingIntent.getActivity(this,0,notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setContentIntent(contentIntent);
+
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        manager.notify(0,builder.build());
     }
 }
