@@ -1,4 +1,4 @@
-package com.example.sbuhacks.ui.main;
+package com.example.sbuhacks;
 
 import android.app.Application;
 import android.app.NotificationChannel;

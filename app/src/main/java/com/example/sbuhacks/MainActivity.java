@@ -15,7 +15,6 @@ import android.location.Location;
 import android.os.Bundle;
 import android.location.Geocoder;
 
-import com.example.sbuhacks.ui.main.NotificationApp;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -42,7 +41,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 
-import com.example.sbuhacks.ui.main.SectionsPagerAdapter;
 import com.nabinbhandari.android.permissions.PermissionHandler;
 import com.nabinbhandari.android.permissions.Permissions;
 
@@ -50,7 +48,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import static com.example.sbuhacks.ui.main.NotificationApp.CHANNEL_1_ID;
+import static com.example.sbuhacks.NotificationApp.CHANNEL_1_ID;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -72,20 +70,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        SectionsPagerAdapter sectionsPagerAdapter = new SectionsPagerAdapter(this, getSupportFragmentManager());
-        ViewPager viewPager = findViewById(R.id.view_pager);
-        viewPager.setAdapter(sectionsPagerAdapter);
-        TabLayout tabs = findViewById(R.id.tabs);
-        tabs.setupWithViewPager(viewPager);
-        FloatingActionButton fab = findViewById(R.id.fab);
-
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
 
         callPermissions();
 
@@ -278,7 +262,7 @@ public class MainActivity extends AppCompatActivity {
             client = new FusedLocationProviderClient(this);
             locationRequest = new LocationRequest();
             locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-            locationRequest.setFastestInterval(15000);
+            locationRequest.setFastestInterval(30000);
             locationRequest.setInterval(20000);
             client.requestLocationUpdates(locationRequest, new LocationCallback() {
                 @Override
