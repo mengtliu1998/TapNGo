@@ -24,8 +24,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.text.InputType;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
+
 import android.view.View;
 import android.widget.EditText;
 
@@ -47,6 +46,8 @@ public class MainActivity extends AppCompatActivity {
     private static Location home = null;
     private static String location;
     private static Geocoder geocoder;
+    private static Location current;
+    private static int distance;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,6 +74,18 @@ public class MainActivity extends AppCompatActivity {
             geocoder = new Geocoder(this, Locale.ENGLISH);
             askForAddress();
         }
+
+        if((distance = (int) current.distanceTo(home) * 3) >= 50){
+            callNotifications();
+            Log.e(TAG, "The distance is " + distance + " ft.");
+        }
+
+
+    }
+
+    public void callNotifications(){
+
+
     }
 
     public void askForAddress(){
@@ -104,6 +117,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.cancel();
+                if(home == null){
+                    askForAddress();
+                }
             }
         });
 
@@ -123,7 +139,11 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onLocationResult(LocationResult locationResult) {
                     super.onLocationResult(locationResult);
-                    Log.e(TAG,"Lat: " + locationResult.getLastLocation().getLatitude() + " Long: " + locationResult.getLastLocation().getLongitude());
+                    Log.e(TAG,"Lat: " + locationResult.getLastLocation().getLatitude() +
+                            " Long: " + locationResult.getLastLocation().getLongitude());
+                    current = new Location("");
+                    current.setLatitude(locationResult.getLastLocation().getLatitude());
+                    current.setLongitude(locationResult.getLastLocation().getLongitude());
                 }
             }, getMainLooper());
         }else{
