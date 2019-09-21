@@ -2,6 +2,7 @@ package com.example.sbuhacks;
 
 
 import android.Manifest;
+import android.app.Notification;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.location.Address;
@@ -12,6 +13,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.location.Geocoder;
 
@@ -25,6 +27,7 @@ import com.google.android.material.tabs.TabLayout;
 
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.PermissionChecker;
 
@@ -47,7 +50,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import static com.example.sbuhacks.NotificationApp.CHANNEL_1_ID;
+
 public class MainActivity extends AppCompatActivity {
+
+    private NotificationManagerCompat notificationManager;
 
     public static final String EXTRA_MESSAGE = "com.example.myfirstapp.MESSAGE";
 
@@ -86,6 +93,8 @@ public class MainActivity extends AppCompatActivity {
             askForAddress();
         }
 
+        notificationManager = NotificationManagerCompat.from(this);
+
     }
 
     public void callNotifications(){
@@ -99,22 +108,35 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void askForAddress(){
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Address");
 
         final EditText editText = new EditText(this);
-        editText.setInputType(InputType.TYPE_TEXT_VARIATION_NORMAL);
+        editText.setInputType(InputType.TYPE_CLASS_TEXT);
+
         builder.setView(editText);
 
         builder.setPositiveButton("Done", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 location = editText.getText().toString();
+
                 try{
-                    List<Address> addressList = geocoder.getFromLocationName(location, 5);
-                    home = new Location("");
-                    home.setLatitude(addressList.get(0).getLatitude());
-                    home.setLatitude(addressList.get(0).getLongitude());
+                    Thread geo = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try{
+                                List<Address> addressList = geocoder.getFromLocationName(location, 5);
+                                home = new Location("");
+                                home.setLatitude(addressList.get(0).getLatitude());
+                                home.setLatitude(addressList.get(0).getLongitude());
+                            }catch (Exception e){
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+                    geo.run();
+
 
                     Log.e(TAG, "The latitude: " + home.getLatitude() + " The long: " + home.getLongitude());
                     callNotifications();
@@ -183,17 +205,34 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    protected void Notification(){
-        NotificationCompat.Builder builder = new NotificationCompat.Builder( this)
+
+
+
+    public void Notification(){
+        String message = "Do you have everything?";
+        Notification notification = new NotificationCompat.Builder( this, CHANNEL_1_ID)
                 .setSmallIcon(R.drawable.notbear)
                 .setContentTitle("Hey you!")
-                .setContentText("Do you have everything?");
+                .setContentText(message)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .build();
+        notificationManager.notify(1,notification);
 
-        Intent notificationIntent = new Intent(this, MainActivity.class);
-        PendingIntent contentIntent = PendingIntent.getActivity(this,0,notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+
+        /*Intent notificationIntent = new Intent(MainActivity.this,NotificationActivity.class);
+        notificationIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        notificationIntent.putExtra("message", message);
+
+        PendingIntent contentIntent = PendingIntent.getActivity(MainActivity.this,
+                0,notificationIntent,PendingIntent.FLAG_UPDATE_CURRENT);
         builder.setContentIntent(contentIntent);
 
-        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        NotificationManager manager = (NotificationManager) getSystemService(
+                Context.NOTIFICATION_SERVICE);
         manager.notify(0,builder.build());
+        */
+        Log.e(TAG,"bro");
     }
+
 }
