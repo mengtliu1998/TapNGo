@@ -4,6 +4,8 @@
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
 
     <application
         android:name=".NotificationApp"
@@ -12,7 +14,10 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/bear_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true">
+
+
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"

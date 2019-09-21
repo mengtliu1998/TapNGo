@@ -60,8 +60,10 @@ import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -124,7 +126,12 @@ public class MainActivity extends AppCompatActivity {
 
         listView = (ListView) findViewById(R.id.reminders);
 
-        arrayList = new ArrayList<>();
+        Set<String> set = preferences.getStringSet("Reminders", null);
+        if(set != null){
+            arrayList = new ArrayList<String>(set);
+        }else{
+            arrayList = new ArrayList<>();
+        }
 
         FloatingActionButton fab = findViewById(R.id.addReminder);
         FloatingActionButton fab2 = findViewById(R.id.setlocation);
@@ -153,6 +160,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 arrayList.remove(position);
+                Set<String> set = new HashSet<String>();
+                set.addAll(arrayList);
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.putStringSet("Reminders", set);
+                editor.apply();
                 listView.setAdapter(arrayAdapter);
             }
         });
@@ -187,6 +199,11 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 newReminder = editText.getText().toString();
                 arrayList.add(newReminder);
+                Set<String> set = new HashSet<String>();
+                set.addAll(arrayList);
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.putStringSet("Reminders", set);
+                editor.apply();
                 listView.setAdapter(arrayAdapter);
             }
         });
@@ -376,8 +393,8 @@ public class MainActivity extends AppCompatActivity {
             client = new FusedLocationProviderClient(this);
             locationRequest = new LocationRequest();
             locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-            locationRequest.setFastestInterval(30000);
-            locationRequest.setInterval(20000);
+            locationRequest.setFastestInterval(12000);
+            locationRequest.setInterval(15000);
             client.requestLocationUpdates(locationRequest, new LocationCallback() {
                 @Override
                 public void onLocationResult(LocationResult locationResult) {
