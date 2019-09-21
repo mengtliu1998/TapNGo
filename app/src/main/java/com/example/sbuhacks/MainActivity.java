@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
 
     protected void Notification(){
         NotificationCompat.Builder builder = new NotificationCompat.Builder( this)
-                .setSmallIcon(R.drawable.ic_bear)
+                .setSmallIcon(R.drawable.notbear)
                 .setContentTitle("Hey you!")
                 .setContentText("Do you have everything?");
 
