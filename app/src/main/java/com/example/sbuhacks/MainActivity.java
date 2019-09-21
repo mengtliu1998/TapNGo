@@ -39,14 +39,32 @@ import android.text.InputType;
 import android.util.Log;
 
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.TextView;
 
 import com.nabinbhandari.android.permissions.PermissionHandler;
 import com.nabinbhandari.android.permissions.Permissions;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.xml.sax.InputSource;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.StringReader;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import static com.example.sbuhacks.NotificationApp.CHANNEL_1_ID;
 
@@ -66,6 +84,13 @@ public class MainActivity extends AppCompatActivity {
     private static int distance;
     private static SharedPreferences preferences;
 
+    ListView listView;
+    private static String newReminder;
+    private ArrayList<String> arrayList;
+    private ArrayAdapter arrayAdapter;
+    private TextView locate;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -78,10 +103,13 @@ public class MainActivity extends AppCompatActivity {
 //        preferences.edit().remove("latitude").apply();
 //        preferences.edit().remove("longitude").apply();
 
-        if (preferences.contains("latitude")) {
+        if (preferences.contains("location")) {
+            location = preferences.getString("location", "SBU");
+            locate = (TextView)findViewById(R.id.currentLocation);
+            locate.setText(location);
             home = new Location("");
             home.setLatitude(preferences.getFloat("latitude", (float) 0.0));
-            home.setLatitude(preferences.getFloat("longitude", (float) 0.0));
+            home.setLongitude(preferences.getFloat("longitude", (float) 0.0));
         } else {
             geocoder = new Geocoder(this, Locale.ENGLISH);
             askForAddress();
@@ -94,99 +122,180 @@ public class MainActivity extends AppCompatActivity {
 
         notificationManager = NotificationManagerCompat.from(this);
 
-    }
+        listView = (ListView) findViewById(R.id.reminders);
 
-    /*public static String getPrecipitation() {
-        String ret = "There is no rain/snow for the next 9 hours.";
-        String[] a = dataObtainer();
-//    	System.out.println(a[1] + " " + a[3] + " " + a[5]);
-        if (a[1].equals("rain") || a[3].equals("rain") || a[5].equals("rain")) {
-            ret = "rain within 9 hours.";
-        }
-        if (a[1].equals("snow") || a[3].equals("snow") || a[5].equals("snow")) {
-            ret = "snow within 9 hours.";
-        }
-        return ret;
-    }
+        arrayList = new ArrayList<>();
 
-    public static String[] dataObtainer() {
-        String data = "";
-        try {
-            String lat = "15.3092";
-            String lon = "61.3794";
-//          URL url = new URL("http://api.openweathermap.org/data/2.5/weather?q=New York,us&APPID=acc903c7dcbb320f5b17c54e372612f4");
-//        	URL url = new URL("http://api.openweathermap.org/data/2.5/forecast?lat=40.916168&lon=-73.118309&mode=xml&appid=acc903c7dcbb320f5b17c54e372612f4");
-            URL url = new URL("http://api.openweathermap.org/data/2.5/forecast?lat=" + lat + "&lon=" + lon + "&units=imperial&mode=xml&appid=acc903c7dcbb320f5b17c54e372612f4");
-            BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
-            String lineRead = reader.readLine();
+        FloatingActionButton fab = findViewById(R.id.addReminder);
+        FloatingActionButton fab2 = findViewById(R.id.setlocation);
 
-            while (lineRead != null) {
-                data += lineRead;
-                lineRead = reader.readLine();
+
+        arrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1,arrayList){
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent){
+                // Get the current item from ListView
+                View view = super.getView(position,convertView,parent);
+
+                // Get the Layout Parameters for ListView Current Item View
+                ViewGroup.LayoutParams params = view.getLayoutParams();
+
+                // Set the height of the Item View
+                params.height = 150;
+                view.setLayoutParams(params);
+
+                return view;
             }
-
-        } catch (MalformedURLException a) {
-
-        } catch (IOException b) {
-
-        }
-        String[] listInfo = new String[6];
-
-        try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            Document document;
-            document = builder.parse(new InputSource(new StringReader(data)));
-            Element rootElement = document.getDocumentElement();
+        };
+        listView.setAdapter(arrayAdapter);
 
 
-            Node forecast = rootElement.getLastChild();
-            Node currentChild = forecast.getFirstChild();
-            Node currentTimeChild;
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                arrayList.remove(position);
+                listView.setAdapter(arrayAdapter);
+            }
+        });
+
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                addReminder();
+            }
+        });
+
+        fab2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                askForAddress();
+            }
+        });
+
+    }
 
 
-            //hardcoded 9 hrs
-            currentTimeChild = (Node) currentChild.getFirstChild().getNextSibling();
-            System.out.println(((Element) currentChild).getAttribute("from"));
-            System.out.println(((Element) currentTimeChild).getAttribute("type"));
-            listInfo[0] = ((Element) currentChild).getAttribute("from");
-            listInfo[1] = ((Element) currentTimeChild).getAttribute("type");
+    public void addReminder(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Add Reminder");
 
-            currentChild = currentChild.getNextSibling();
-            System.out.println(((Element) currentChild).getAttribute("from"));
-            currentTimeChild = (Node) currentChild.getFirstChild().getNextSibling();
-            System.out.println(((Element) currentTimeChild).getAttribute("type"));
-            listInfo[2] = ((Element) currentChild).getAttribute("from");
-            listInfo[3] = ((Element) currentTimeChild).getAttribute("type");
+        final EditText editText = new EditText(this);
+        editText.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(editText);
 
-            currentChild = currentChild.getNextSibling();
-            System.out.println(((Element) currentChild).getAttribute("from"));
-            currentTimeChild = (Node) currentChild.getFirstChild().getNextSibling();
-            System.out.println(((Element) currentTimeChild).getAttribute("type"));
-            listInfo[4] = ((Element) currentChild).getAttribute("from");
-            listInfo[5] = ((Element) currentTimeChild).getAttribute("type");
+        builder.setPositiveButton("Done", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                newReminder = editText.getText().toString();
+                arrayList.add(newReminder);
+                listView.setAdapter(arrayAdapter);
+            }
+        });
 
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
 
-        } catch (SAXException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ParserConfigurationException e) {
-            e.printStackTrace();
-        }
+        builder.show();
+    }
 
+//
+//    public static String getPrecipitation() throws IOException {
+//        String ret = "There is no rain/snow for the next 9 hours.";
+//        String[] a = dataObtainer();
+////    	System.out.println(a[1] + " " + a[3] + " " + a[5]);
+//        if(a != null && a.length >5){
+//            if ("rain".equals(a[1]) || "rain".equals(a[3]) || "rain".equals(a[5])) {
+//                ret = "rain within 9 hours.";
+//            }
+//            if ("snow".equals(a[1]) || "snow".equals(a[3]) || "snow".equals(a[5])) {
+//                ret = "snow within 9 hours.";
+//            }
+//        }
+//
+//        return ret;
+//    }
+//
+//    public static String[] dataObtainer(){
+//        String data = "";
+//        try {
+//            String lat = "15.3092";
+//            String lon = "61.3794";
+////          URL url = new URL("http://api.openweathermap.org/data/2.5/weather?q=New York,us&APPID=acc903c7dcbb320f5b17c54e372612f4");
+////        	URL url = new URL("http://api.openweathermap.org/data/2.5/forecast?lat=40.916168&lon=-73.118309&mode=xml&appid=acc903c7dcbb320f5b17c54e372612f4");
+//            URL url = new URL("http://api.openweathermap.org/data/2.5/forecast?lat=" + lat + "&lon=" + lon + "&units=imperial&mode=xml&appid=acc903c7dcbb320f5b17c54e372612f4");
+//            BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
+//            String lineRead = reader.readLine();
+//
+//            while (lineRead != null) {
+//                data += lineRead;
+//                lineRead = reader.readLine();
+//            }
+//
+//        } catch (Exception e){
+//            e.printStackTrace();
+//        }
+//        String[] listInfo = new String[6];
+//
+//        try {
+//            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+//            DocumentBuilder builder = factory.newDocumentBuilder();
+//            Document document;
+//            document = builder.parse(new InputSource(new StringReader(data)));
+//            Element rootElement = document.getDocumentElement();
+//
+//
+//            Node forecast = rootElement.getLastChild();
+//            Node currentChild = forecast.getFirstChild();
+//            Node currentTimeChild;
+//
+//
+//            //hardcoded 9 hrs
+//            currentTimeChild = (Node) currentChild.getFirstChild().getNextSibling();
+//            System.out.println(((Element) currentChild).getAttribute("from"));
+//            System.out.println(((Element) currentTimeChild).getAttribute("type"));
+//            listInfo[0] = ((Element) currentChild).getAttribute("from");
+//            listInfo[1] = ((Element) currentTimeChild).getAttribute("type");
+//
+//            currentChild = currentChild.getNextSibling();
+//            System.out.println(((Element) currentChild).getAttribute("from"));
+//            currentTimeChild = (Node) currentChild.getFirstChild().getNextSibling();
+//            System.out.println(((Element) currentTimeChild).getAttribute("type"));
+//            listInfo[2] = ((Element) currentChild).getAttribute("from");
+//            listInfo[3] = ((Element) currentTimeChild).getAttribute("type");
+//
+//            currentChild = currentChild.getNextSibling();
+//            System.out.println(((Element) currentChild).getAttribute("from"));
+//            currentTimeChild = (Node) currentChild.getFirstChild().getNextSibling();
+//            System.out.println(((Element) currentTimeChild).getAttribute("type"));
+//            listInfo[4] = ((Element) currentChild).getAttribute("from");
+//            listInfo[5] = ((Element) currentTimeChild).getAttribute("type");
+//
+//
+//        } catch (Exception e){
+//            e.printStackTrace();
+//        }
+//
+//        return listInfo;
+//    }
 
-        return listInfo;
-    }*/
-
-    public void callNotifications() {
-        if (home != null && (distance = (int) current.distanceTo(home) * 3) >= 80) {
+    public void callNotifications(){
+        if (home != null && (distance = (int) current.distanceTo(home) * 3) >= 50) {
             Log.e(TAG, "The distance is " + distance + " ft.");
-            /*if (getPrecipitation() == "There is no rain/snow for the next 9 hours.") {
-                NotificationRain();
-            } else {*/
-                Notification();
-  //          }
+//            try{
+//                String weather = getPrecipitation();
+//                if (weather.equals("There is no rain/snow for the next 9 hours.")) {
+//                    Notification();
+//                } else {
+//                    NotificationRain();
+//                }
+//            }catch (Exception e){
+//                e.printStackTrace();
+//            }
+            Notification();
+
         } else {
             Log.e(TAG, "Bs The distance is " + distance + " ft.");
 
@@ -206,6 +315,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 location = editText.getText().toString();
+                locate = (TextView)findViewById(R.id.currentLocation);
+                locate.setText(location);
                 Log.e(TAG, location);
 
                 try {
@@ -220,6 +331,7 @@ public class MainActivity extends AppCompatActivity {
                                 SharedPreferences.Editor editor = preferences.edit();
                                 editor.putFloat("latitude", (float) addressList.get(0).getLatitude());
                                 editor.putFloat("longitude", (float) addressList.get(0).getLongitude());
+                                editor.putString("location", location);
                                 editor.apply();
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -246,6 +358,8 @@ public class MainActivity extends AppCompatActivity {
                     home.setLongitude(current.getLongitude());
                     home.setLatitude(current.getLatitude());
                     Log.e(TAG, "HARDCODED: The latitude: " + home.getLatitude() + " The long: " + home.getLongitude());
+                    locate = (TextView)findViewById(R.id.currentLocation);
+                    locate.setText("Latitude: " + current.getLatitude() + " Longitude: " + current.getLongitude());
                     callNotifications();
                 }
             }
