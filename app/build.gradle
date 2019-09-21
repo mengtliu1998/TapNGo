@@ -29,5 +29,9 @@ dependencies {
     androidTestImplementation 'androidx.test:runner:1.2.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
-    //implementation "com.android.support:support-compat:28.0.0"
+
+    //For Location
+    implementation 'com.google.android.gms:play-services-location:17.0.0'
+    implementation 'com.nabinbhandari.android:permissions:3.8'
+
 }
