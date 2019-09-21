@@ -91,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
     public void callNotifications(){
         if(home != null && (distance = (int) current.distanceTo(home) * 3) >= 50){
             Log.e(TAG, "The distance is " + distance + " ft.");
+            Notification();
         }else{
             Log.e(TAG, "Bs The distance is " + distance + " ft.");
 
