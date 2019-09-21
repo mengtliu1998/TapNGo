@@ -5,6 +5,7 @@ import android.Manifest;
 import android.app.Notification;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.location.Address;
 import android.location.Location;
 
@@ -36,6 +37,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.preference.PreferenceManager;
 import android.text.InputType;
 import android.util.Log;
 
@@ -66,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
     private static Geocoder geocoder;
     private static Location current = new Location("");
     private static int distance;
+    private static SharedPreferences preferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,10 +91,24 @@ public class MainActivity extends AppCompatActivity {
 
         callPermissions();
 
-        if(home == null){
+        preferences =
+                PreferenceManager.getDefaultSharedPreferences(this);
+//        preferences.edit().remove("latitude").apply();
+//        preferences.edit().remove("longitude").apply();
+
+        if(preferences.contains("latitude")){
+            home = new Location("");
+            home.setLatitude(preferences.getFloat("latitude", (float)0.0));
+            home.setLatitude(preferences.getFloat("longitude", (float)0.0));
+        }else{
             geocoder = new Geocoder(this, Locale.ENGLISH);
             askForAddress();
         }
+
+//        if(home == null){
+//            geocoder = new Geocoder(this, Locale.ENGLISH);
+//            askForAddress();
+//        }
 
         notificationManager = NotificationManagerCompat.from(this);
 
@@ -130,6 +147,10 @@ public class MainActivity extends AppCompatActivity {
                                 home = new Location("");
                                 home.setLatitude(addressList.get(0).getLatitude());
                                 home.setLatitude(addressList.get(0).getLongitude());
+                                SharedPreferences.Editor editor = preferences.edit();
+                                editor.putFloat("latitude",(float)addressList.get(0).getLatitude());
+                                editor.putFloat("longitude",(float)addressList.get(0).getLongitude());
+                                editor.apply();
                             }catch (Exception e){
                                 e.printStackTrace();
                             }
@@ -152,8 +173,8 @@ public class MainActivity extends AppCompatActivity {
                 dialog.cancel();
                 if(home == null){
                     home = new Location("");
-                    home.setLongitude(-73.1229135);
-                    home.setLatitude(40.9155068);
+                    home.setLongitude(current.getLongitude());
+                    home.setLatitude(current.getLatitude());
                     Log.e(TAG, "HARDCODED: The latitude: " + home.getLatitude() + " The long: " + home.getLongitude());
                     callNotifications();
                 }
@@ -180,6 +201,7 @@ public class MainActivity extends AppCompatActivity {
                             " Long: " + locationResult.getLastLocation().getLongitude());
                     current.setLatitude(locationResult.getLastLocation().getLatitude());
                     current.setLongitude(locationResult.getLastLocation().getLongitude());
+                    callNotifications();
                 }
             }, getMainLooper());
         }else{
