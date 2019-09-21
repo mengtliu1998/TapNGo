@@ -43,10 +43,10 @@ public class MainActivity extends AppCompatActivity {
     private FusedLocationProviderClient client;
     private LocationRequest locationRequest;
     private static final String TAG = "MainActivity";
-    private static Location home = null;
+    private static Location home;
     private static String location;
     private static Geocoder geocoder;
-    private static Location current;
+    private static Location current = new Location("");
     private static int distance;
 
     @Override
@@ -75,17 +75,15 @@ public class MainActivity extends AppCompatActivity {
             askForAddress();
         }
 
-        if((distance = (int) current.distanceTo(home) * 3) >= 50){
-            callNotifications();
-            Log.e(TAG, "The distance is " + distance + " ft.");
-        }
-
-
     }
 
     public void callNotifications(){
+        if(home != null && (distance = (int) current.distanceTo(home) * 3) >= 50){
+            Log.e(TAG, "The distance is " + distance + " ft.");
+        }else{
+            Log.e(TAG, "Bs The distance is " + distance + " ft.");
 
-
+        }
     }
 
     public void askForAddress(){
@@ -107,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
                     home.setLatitude(addressList.get(0).getLongitude());
 
                     Log.e(TAG, "The latitude: " + home.getLatitude() + " The long: " + home.getLongitude());
+                    callNotifications();
                 }catch (Exception e){
                     e.printStackTrace();
                 }
@@ -118,7 +117,11 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 dialog.cancel();
                 if(home == null){
-                    askForAddress();
+                    home = new Location("");
+                    home.setLongitude(-73.1229135);
+                    home.setLatitude(40.9155068);
+                    Log.e(TAG, "HARDCODED: The latitude: " + home.getLatitude() + " The long: " + home.getLongitude());
+                    callNotifications();
                 }
             }
         });
@@ -141,7 +144,6 @@ public class MainActivity extends AppCompatActivity {
                     super.onLocationResult(locationResult);
                     Log.e(TAG,"Lat: " + locationResult.getLastLocation().getLatitude() +
                             " Long: " + locationResult.getLastLocation().getLongitude());
-                    current = new Location("");
                     current.setLatitude(locationResult.getLastLocation().getLatitude());
                     current.setLongitude(locationResult.getLastLocation().getLongitude());
                 }
